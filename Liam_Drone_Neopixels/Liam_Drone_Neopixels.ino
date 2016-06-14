@@ -1,61 +1,57 @@
-// NeoPixel Ring simple sketch (c) 2013 Shae Erisson
-// released under the GPLv3 license to match the rest of the AdaFruit NeoPixel library
-
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
   #include <avr/power.h>
 #endif
+ 
 
-// Which pin on the Arduino is connected to the NeoPixels?
-// On a Trinket or Gemma we suggest changing this to 1
 #define PIN            0
 #define PIN1           1
 
-// How many NeoPixels are attached to the Arduino?
-#define NUMPIXELS      10
-
-// When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
-// Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
-// example for more information on possible values.
-Adafruit_NeoPixel Rear = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+#define NUMPIXELS 5
+ 
+Adafruit_NeoPixel Rear = Adafruit_NeoPixel(NUMPIXELS, PIN1, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel Front = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
-
-int delayval = 500; // delay for half a second
-
+int pixels = 5;
+int frames = 5;
+int fps = 24; //For that "cinematic" feel
+byte data[] = {0,0,0,0,0,0,255,0,0,0,0,0,0,0,0,0,0,0,255,0,0,0,0,0,255,0,0,0,0,0,255,0,0,0,0,0,0,0,0,0,0,0,255,0,0,0,0,0,255,0,0,0,0,0,255,0,0,0,0,0,0,0,0,0,0,0,255,0,0,0,0,0,0,0,0};
+int Position;
 void setup() {
-  // This is for Trinket 5V 16MHz, you can remove these three lines if you are not using a Trinket
-#if defined (__AVR_ATtiny85__)
-  if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
-#endif
-  // End of trinket special code
-
-  Rear.begin(); // This initializes the NeoPixel library.
-  Front.begin(); 
+  Front.begin();
+  Rear.begin();
+  Front.show();
+  Rear.show();
 }
+ 
+int pos = 0, dir = 1; // Position, direction of "eye"
+int pos1 = 0, dir1 = 1;
+int cframe = 0;
+
+
+ uint32_t green = Front.Color(0, 255, 0);
+ uint32_t red = Front.Color(255, 0, 0);
+ uint32_t blue = Front.Color(0, 0, 255);
+ 
 
 void loop() {
-
-  // For a set of NeoPixels the first NeoPixel is 0, second is 1, all the way up to the count of pixels minus one.
-
-  for(int i=0;i<NUMPIXELS;i++){
-
-    // pixels.Color takes RGB values, from 0,0,0 up to 255,255,255
-    Front.setPixelColor(i, Front.Color(0,150,0)); // Moderately bright green color.
-
-    Front.show(); // This sends the updated pixel color to the hardware.
-
-    delay(delayval); // Delay for a period of time (in milliseconds).
-
+  for (int i=0; i<NUMPIXELS; i++) {
+        int cpixel = i % pixels;
+        int index = cframe*pixels*3 + cpixel*3;
+        Rear.setPixelColor(i,data[index],data[index+1],data[index+2]);
+    }
+    for(int i=0; i<NUMPIXELS; i++)
+  {
+    Position++;
+    for(int i=0; i<NUMPIXELS; i++) {
+      Front.setPixelColor(i,((-sin(i+Position)*127+128)/255)*red);
+    }
+    Front.show();
   }
-  for(int i=0;i<NUMPIXELS;i++){
-
-    // pixels.Color takes RGB values, from 0,0,0 up to 255,255,255
-    Rear.setPixelColor(i, Rear.Color(0,150,0)); // Moderately bright green color.
-
-    Rear.show(); // This sends the updated pixel color to the hardware.
-
-    delay(delayval); // Delay for a period of time (in milliseconds).
-
-  }
+   
+    Rear.show();
+    cframe ++;
+    if (cframe >= frames) cframe = 0;
+    delay(1000/fps);
+  
 }
